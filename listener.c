@@ -7,6 +7,16 @@
 atomic_uchar g_running;
 atomic_int g_returnCode;
 
+static gboolean main_thread_maybe_exit_callback(void* /*inout_pUserData*/) {
+	if (!atomic_load(&g_running)) atspi_event_quit();
+
+	return G_SOURCE_REMOVE;
+}
+
+static void dispatch_exit_in_main_thread(void) {
+	g_main_context_invoke((void*)0, &main_thread_maybe_exit_callback, (void*)0);
+}
+
 static void maybe_error(GError* inout_pError, unsigned char exit_if_fail) {
 	if (!inout_pError) return;
 
@@ -18,6 +28,7 @@ static void maybe_error(GError* inout_pError, unsigned char exit_if_fail) {
 		printf("Exit requested. Shutting down.");
 		atomic_store(&g_returnCode, code);
 		atomic_store(&g_running, 0);
+		dispatch_exit_in_main_thread();
 	}
 	else (void) code;
 }
@@ -29,6 +40,7 @@ static void handle_signal(int signal) {
 			printf("Interrupt signal received. Shutting down.");
 			atomic_store(&g_running, 0);
 			atomic_store(&g_returnCode, 0);
+			dispatch_exit_in_main_thread();
 			break;
 		default:
 			break;
