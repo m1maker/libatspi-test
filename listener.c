@@ -138,7 +138,53 @@ int main(void) {
 	static struct sigaction signal_action;
 	initialize_signal_action(&signal_action);
 
+	static const char* EVENTS_TO_REGISTER[] = {
+		"object:announcement"
+	};
+	static const unsigned long long int EVENTS_TO_REGISTER_COUNT = sizeof(EVENTS_TO_REGISTER) / sizeof(EVENTS_TO_REGISTER[0]);
+
 	printf("Starting announcement event listener");
+
+	int result = atspi_init();
+	if (result !=0 || result != 1) {
+		fprintf(stderr, "Error: [AT-SPI] Failed to initialize\nCode: %d", result);
+		atomic_store(&g_returnCode, result);
+		atomic_store(&g_running, 0);
+		return atomic_load(&g_returnCode);
+	}
+
+	AtspiEventListener* pEventListener = atspi_event_listener_new(&atspi_event_callback, /*this*/(void*)0, (void*)0);
+	if (
+		!pEventListener ||
+		!atomic_load(&g_running)
+	) return atomic_load(&g_returnCode);
+
+	{
+		GError* pError = (void*)0;
+		for (
+			unsigned long long int i = 0;
+			i < EVENTS_TO_REGISTER_COUNT;
+			++i
+		) {
+			atspi_event_listener_register(pEventListener, EVENTS_TO_REGISTER[i], &pError);
+			maybe_error(pError, 0);
+			pError = (void*)0;
+		}
+	}
+
+	atspi_event_main();
+
+	for (
+		unsigned long long int i = 0;
+		i < EVENTS_TO_REGISTER_COUNT;
+		++i
+	) {
+		atspi_event_listener_deregister(pEventListener, EVENTS_TO_REGISTER[i], (void*)0);
+	}
+
+	g_object_unref(pEventListener);
+	pEventListener = (void*)0;
+	atspi_exit();
 
 	atomic_store(&g_running, 0);
 	return atomic_load(&g_returnCode);
