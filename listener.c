@@ -20,12 +20,12 @@ static void dispatch_exit_in_main_thread(void) {
 static void maybe_error(GError* inout_pError, unsigned char exit_if_fail) {
 	if (!inout_pError) return;
 
-	fprintf(stderr, "Error: [GLib] %s", inout_pError->message ? inout_pError->message : "NULL");
+	fprintf(stderr, "Error: [GLib] %s\n", inout_pError->message ? inout_pError->message : "NULL");
 	int code = inout_pError->code;
 	g_error_free(inout_pError);
 	inout_pError = (void*)0;
 	if (exit_if_fail) {
-		printf("Exit requested. Shutting down.");
+		printf("Exit requested. Shutting down.\n");
 		atomic_store(&g_returnCode, code);
 		atomic_store(&g_running, 0);
 		dispatch_exit_in_main_thread();
@@ -37,7 +37,7 @@ static void handle_signal(int signal) {
 	switch (signal) {
 		case SIGINT:
 		case SIGTERM:
-			printf("Interrupt signal received. Shutting down.");
+			printf("Interrupt signal received. Shutting down.\n");
 			atomic_store(&g_running, 0);
 			atomic_store(&g_returnCode, 0);
 			dispatch_exit_in_main_thread();
@@ -104,7 +104,7 @@ static void atspi_event_callback(AtspiEvent* inout_pEvent, void* /*inout_pUserDa
 		!inout_pEvent ||
 		!inout_pEvent->type
 	) {
-		fprintf(stderr, "Error: [AT-SPI] Event received, but it could not be handled because required data is null.");
+		fprintf(stderr, "Error: [AT-SPI] Event received, but it could not be handled because required data is null.\n");
 		return;
 	}
 	else if (!atomic_load(&g_running)) {
@@ -155,11 +155,11 @@ int main(void) {
 	};
 	static const unsigned long long int EVENTS_TO_REGISTER_COUNT = sizeof(EVENTS_TO_REGISTER) / sizeof(EVENTS_TO_REGISTER[0]);
 
-	printf("Starting announcement event listener");
+	printf("Starting announcement event listener\n");
 
 	int result = atspi_init();
-	if (result !=0 || result != 1) {
-		fprintf(stderr, "Error: [AT-SPI] Failed to initialize\nCode: %d", result);
+	if (result !=0 && result != 1) {
+		fprintf(stderr, "Error: [AT-SPI] Failed to initialize\nCode: %d\n", result);
 		atomic_store(&g_returnCode, result);
 		atomic_store(&g_running, 0);
 		return atomic_load(&g_returnCode);
