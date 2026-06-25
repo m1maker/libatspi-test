@@ -1,4 +1,4 @@
-#include <stdatomic>
+#include <stdatomic.h>
 
 atomic_uchar g_running;
 atomic_int g_returnCode;
