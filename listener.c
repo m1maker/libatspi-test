@@ -133,7 +133,7 @@ static void atspi_event_callback(AtspiEvent* inout_pEvent, void* /*inout_pUserDa
 		"  type: %s\n"
 		"  Source: %p\n"
 		"  First detail type: %s\n"
-		"  First detail data: %s\n",
+		"  First detail data: %s\n"
 		"  Unpacked value: %s\n",
 		inout_pEvent->type,
 		(void*)inout_pEvent->source,
