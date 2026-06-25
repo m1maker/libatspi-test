@@ -16,4 +16,7 @@ target_include_directories(${PROJECT_NAME}-listener PRIVATE
     ${ATSPI_INCLUDE_DIRS}
 )
 
-target_link_libraries(${PROJECT_NAME}-listener ${ATSPI_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}-listener PRIVATE
+    ${ATSPI_LIBRARIES}
+    ${GOBJECT_LIBRARIES}
+)
