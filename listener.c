@@ -102,7 +102,8 @@ static detail_type_t determin_detail_type(const gchar* in_pEventType) {
 static void atspi_event_callback(AtspiEvent* inout_pEvent, void* /*inout_pUserData*/) {
 	if (
 		!inout_pEvent ||
-		!inout_pEvent->type
+		!inout_pEvent->type ||
+		inout_pEvent->type[0] == '\0'
 	) {
 		fprintf(stderr, "Error: [AT-SPI] Event received, but it could not be handled because required data is null.\n");
 		return;
@@ -121,22 +122,24 @@ static void atspi_event_callback(AtspiEvent* inout_pEvent, void* /*inout_pUserDa
 			break;
 		case DETAIL_TYPE_LIVE:
 			detail_data = atspi_live_to_string(inout_pEvent->detail1);
-			unpacked_value = g_value_get_string(&inout_pEvent->any_data);
+			if (G_IS_VALUE(&inout_pEvent->any_data)) {
+				unpacked_value = g_value_get_string(&inout_pEvent->any_data);
+			}
 			break;
 	}
 
 	printf(
 		"Info: [AT-SPI] Event received\n"
 		"  type: %s\n"
-		"  Source: %ull\n"
+		"  Source: %p\n"
 		"  First detail type: %s\n"
 		"  First detail data: %s\n",
 		"  Unpacked value: %s\n",
 		inout_pEvent->type,
-		inout_pEvent->source,
-		detail_type,
+		(void*)inout_pEvent->source,
+		detail_type_to_string(detail_type),
 		detail_data,
-		unpacked_value ? unpacked_value : "NONE"
+		unpacked_value
 	);
 
 	if (G_IS_VALUE(&inout_pEvent->any_data)) g_value_unset(&inout_pEvent->any_data);
